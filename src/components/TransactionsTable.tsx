@@ -34,7 +34,14 @@ import {
     return <Chip label="Failed" size="small" variant="outlined" />;
   }
   
-  export default function TransactionsTable({ rows }: { rows: Transaction[] }) {
+  export default function TransactionsTable({
+    rows,
+    onRowClick,
+  }: {
+    rows: Transaction[];
+    onRowClick?: (tx: Transaction) => void;
+  }) {
+  
     return (
       <Paper sx={{ p: 2, borderRadius: 3 }}>
         <Typography variant="h6" fontWeight={800} sx={{ mb: 1 }}>
@@ -55,7 +62,13 @@ import {
   
             <TableBody>
               {rows.map((t) => (
-                <TableRow key={t.id} hover>
+                <TableRow
+                key={t.id}
+                hover
+                onClick={onRowClick ? () => onRowClick(t) : undefined}
+                sx={onRowClick ? { cursor: "pointer" } : undefined}
+              >
+              
                   <TableCell>{formatDate(t.date)}</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>{t.merchant}</TableCell>
                   <TableCell>{t.description}</TableCell>

@@ -15,15 +15,30 @@ import {
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import { signOut } from "../auth/auth";
 import { useNavigate } from "react-router-dom";
+import type { ColorMode } from "../theme/theme";
+import DarkModeIcon from "@mui/icons-material/DarkMode";
+import LightModeIcon from "@mui/icons-material/LightMode";
+import IconButton from "@mui/material/IconButton";
+import Tooltip from "@mui/material/Tooltip";
+
 
 
 const drawerWidth = 260;
 
-export default function AppLayouts() {
+export default function AppLayouts({
+  mode,
+  onToggleMode,
+}: {
+  mode: ColorMode;
+  onToggleMode: () => void;
+}) {
+
+  
 
   const navigate = useNavigate();
   const location = useLocation();
 const isDashboard = location.pathname.startsWith("/app/dashboard");
+
 
 
 
@@ -37,6 +52,12 @@ const isDashboard = location.pathname.startsWith("/app/dashboard");
 
   <div style={{ flex: 1 }} />
 
+  <Tooltip title={mode === "dark" ? "Switch to light" : "Switch to dark"}>
+    <IconButton color="inherit" onClick={onToggleMode}>
+      {mode === "dark" ? <LightModeIcon /> : <DarkModeIcon />}
+    </IconButton>
+  </Tooltip>
+
   <Button
     color="inherit"
     onClick={() => {
@@ -47,6 +68,7 @@ const isDashboard = location.pathname.startsWith("/app/dashboard");
     Logout
   </Button>
 </Toolbar>
+
 
       </AppBar>
 

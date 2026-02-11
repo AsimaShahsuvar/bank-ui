@@ -1,14 +1,24 @@
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Grid, Skeleton, Typography } from "@mui/material";
 import TransactionsTable from "../../components/TransactionsTable";
 import { getTransactions, type Transaction } from "../../api/client";
 import { Card, CardContent } from "@mui/material";
-import Bank3DCard from "../../components/Bank3DCard";
+import TransactionsFilter from "../../components/TransactionsFilter";
+import TransactionDetailsDrawer from "../../components/TransactionDetailsDrawer";
 
+
+const Bank3DCard = lazy(() => import("../../components/Bank3DCard"));
+const BalanceChart = lazy(() => import("../../components/BalanceChart"));
 
 
 export default function Dashboard() {
   const [rows, setRows] = useState<Transaction[] | null>(null);
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("all");
+  const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+
 
   useEffect(() => {
     let alive = true;
@@ -25,6 +35,23 @@ export default function Dashboard() {
     if (!rows) return 0;
     return rows.reduce((acc, t) => acc + t.amount, 0);
   }, [rows]);
+
+ 
+  const filteredRows = useMemo(() => {
+    if (!rows) return [];
+  
+    return rows.filter((t) => {
+      const matchesSearch =
+        t.merchant.toLowerCase().includes(search.toLowerCase()) ||
+        t.description.toLowerCase().includes(search.toLowerCase());
+  
+      const matchesStatus =
+        status === "all" ? true : t.status === status;
+  
+      return matchesSearch && matchesStatus;
+    });
+  }, [rows, search, status]);
+  
 
   return (
     <>
@@ -79,15 +106,63 @@ export default function Dashboard() {
           </Typography>
         </Grid>
 
-        <Grid  size={{ xs: 12, md: 5 }}>
-  <Bank3DCard />
+        <Grid size={{ xs: 12 }}>
+  <TransactionsFilter
+    search={search}
+    status={status}
+    onSearchChange={setSearch}
+    onStatusChange={setStatus}
+  />
+       </Grid>
+
+   
+       <Grid size={{ xs: 12, md: 12 }}>
+  {rows ? (
+    <Suspense fallback={<Skeleton height={220} />}>
+      <BalanceChart rows={rows} />
+    </Suspense>
+  ) : (
+    <Skeleton height={220} />
+  )}
 </Grid>
 
+
+
+
+<Grid size={{ xs: 12, md: 5 }}>
+  <Suspense fallback={<Skeleton height={260} />}>
+    <Bank3DCard />
+  </Suspense>
+</Grid>
+
+
 <Grid  size={{ xs: 12, md: 7 }}>
-  {rows ? <TransactionsTable rows={rows} /> : <Skeleton height={240} />}
+{rows ? (
+  <TransactionsTable
+  rows={filteredRows}
+  onRowClick={(tx) => {
+    setSelectedTx(tx);
+    setDrawerOpen(true);
+  }}
+/>
+
+) : (
+  <Skeleton height={240} />
+)}
+
 </Grid>
 
       </Grid>
+      <TransactionDetailsDrawer
+  open={drawerOpen}
+  tx={selectedTx}
+  onClose={() => {
+    setDrawerOpen(false);
+    setSelectedTx(null);
+  }}
+/>
+
+
     </>
   );
 }
